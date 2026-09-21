@@ -3,23 +3,683 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <title>Movie Recap AI</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #0b1020;
+      color: white;
+    }
+
+    .container {
+      width: 92%;
+      max-width: 900px;
+      margin: auto;
+      padding: 30px 0 50px;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .header h1 {
+      font-size: 34px;
+      margin-bottom: 10px;
+    }
+
+    .header p {
+      color: #aeb7ca;
+    }
+
+    .card {
+      background: #151c30;
+      border: 1px solid #29334d;
+      border-radius: 18px;
+      padding: 22px;
+      margin-bottom: 20px;
+    }
+
+    .card h2 {
+      margin-top: 0;
+    }
+
+    .upload {
+      border: 2px dashed #596681;
+      border-radius: 15px;
+      padding: 35px 15px;
+      text-align: center;
+      cursor: pointer;
+    }
+
+    .upload:hover {
+      border-color: #8066ff;
+    }
+
+    .upload input {
+      display: none;
+    }
+
+    .upload-icon {
+      font-size: 45px;
+      margin-bottom: 10px;
+    }
+
+    #fileName {
+      margin-top: 12px;
+      color: #aeb7ca;
+    }
+
+    video {
+      width: 100%;
+      margin-top: 20px;
+      border-radius: 12px;
+      background: black;
+      display: none;
+    }
+
+    .settings {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      color: #cbd3e2;
+    }
+
+    select,
+    button {
+      width: 100%;
+      padding: 14px;
+      border-radius: 10px;
+      border: 1px solid #39445f;
+      background: #0d1425;
+      color: white;
+      font-size: 16px;
+    }
+
+    button {
+      background: #7055ff;
+      border: none;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    button:hover {
+      background: #5c42e5;
+    }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    #generateBtn {
+      margin-top: 20px;
+      font-size: 18px;
+    }
+
+    #progressBox {
+      display: none;
+      margin-top: 20px;
+    }
+
+    .progress {
+      width: 100%;
+      height: 12px;
+      background: #080d19;
+      border-radius: 20px;
+      overflow: hidden;
+    }
+
+    #progressBar {
+      width: 0%;
+      height: 100%;
+      background: #8066ff;
+      transition: width 0.3s;
+    }
+
+    #status {
+      margin-top: 10px;
+      color: #aeb7ca;
+    }
+
+    #results {
+      display: none;
+    }
+
+    .result {
+      background: #0d1425;
+      border: 1px solid #29334d;
+      border-radius: 12px;
+      padding: 18px;
+      margin-top: 12px;
+    }
+
+    .result p {
+      color: #cbd3e2;
+      line-height: 1.8;
+      white-space: pre-wrap;
+    }
+
+    .download {
+      margin-top: 10px;
+      background: #202a42;
+    }
+
+    footer {
+      text-align: center;
+      color: #68738a;
+      margin-top: 30px;
+    }
+
+    @media (max-width: 600px) {
+      .settings {
+        grid-template-columns: 1fr;
+      }
+
+      .header h1 {
+        font-size: 28px;
+      }
+    }
+  </style>
 </head>
 
 <body>
-  <h1>🎬 Movie Recap AI</h1>
 
-  <p>Video ထည့်ပြီး AI Recap ပြုလုပ်ပါ</p>
+<div class="container">
 
-  <input type="file" accept="video/*">
+  <div class="header">
+    <h1>🎬 Movie Recap AI</h1>
+    <p>Video ထည့်ပြီး AI Recap ပြုလုပ်ပါ</p>
+  </div>
 
-  <br><br>
 
-  <button>Generate Recap</button>
+  <!-- VIDEO UPLOAD -->
 
-  <p>🎙️ Voice-over</p>
-  <p>💬 SRT Subtitle</p>
-  <p>🔍 Copyright Check</p>
-  <p>🎞️ Recap Video</p>
+  <div class="card">
+
+    <h2>🎥 Video Upload</h2>
+
+    <label class="upload">
+
+      <div class="upload-icon">📁</div>
+
+      <strong>Video ရွေးရန် နှိပ်ပါ</strong>
+
+      <p>MP4 / MOV / WEBM</p>
+
+      <input
+        id="videoInput"
+        type="file"
+        accept="video/*"
+      >
+
+      <div id="fileName">
+        Video မရွေးရသေးပါ
+      </div>
+
+    </label>
+
+    <video id="videoPreview" controls></video>
+
+  </div>
+
+
+  <!-- SETTINGS -->
+
+  <div class="card">
+
+    <h2>⚙️ Recap Settings</h2>
+
+    <div class="settings">
+
+      <div>
+
+        <label>ဘာသာစကား</label>
+
+        <select id="language">
+
+          <option value="my">
+            မြန်မာ
+          </option>
+
+          <option value="en">
+            English
+          </option>
+
+        </select>
+
+      </div>
+
+
+      <div>
+
+        <label>Recap အရှည်</label>
+
+        <select id="recapLength">
+
+          <option value="short">
+            Short
+          </option>
+
+          <option value="normal">
+            Normal
+          </option>
+
+          <option value="long">
+            Detailed
+          </option>
+
+        </select>
+
+      </div>
+
+    </div>
+
+
+    <button id="generateBtn">
+      🤖 Generate Recap
+    </button>
+
+
+    <div id="progressBox">
+
+      <div class="progress">
+
+        <div id="progressBar"></div>
+
+      </div>
+
+      <div id="status">
+        Preparing...
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- RESULTS -->
+
+  <div id="results">
+
+    <div class="card">
+
+      <h2>📝 AI Recap</h2>
+
+      <div class="result">
+
+        <p id="recapText"></p>
+
+        <button
+          class="download"
+          onclick="downloadRecap()"
+        >
+          ⬇️ Download Recap
+        </button>
+
+      </div>
+
+    </div>
+
+
+    <div class="card">
+
+      <h2>🎙️ Voice-over</h2>
+
+      <div class="result">
+
+        <p>
+          Recap စာသားကို AI Voice အဖြစ်
+          ပြောင်းပေးမည့်နေရာ ဖြစ်ပါတယ်။
+        </p>
+
+        <button disabled>
+          🎙️ Generate Voice
+        </button>
+
+      </div>
+
+    </div>
+
+
+    <div class="card">
+
+      <h2>💬 SRT Subtitle</h2>
+
+      <div class="result">
+
+        <p>
+          AI Recap ကို Subtitle အဖြစ်
+          ပြောင်းပေးမည့်နေရာ ဖြစ်ပါတယ်။
+        </p>
+
+        <button disabled>
+          💬 Generate SRT
+        </button>
+
+      </div>
+
+    </div>
+
+
+    <div class="card">
+
+      <h2>🔍 Copyright Check</h2>
+
+      <div class="result">
+
+        <p>
+          Copyright checking service ကို
+          နောက်ပိုင်းမှာ Backend နှင့် ချိတ်ဆက်နိုင်ပါတယ်။
+        </p>
+
+      </div>
+
+    </div>
+
+
+    <div class="card">
+
+      <h2>🎞️ Recap Video</h2>
+
+      <div class="result">
+
+        <p>
+          Video + Voice-over + Subtitle
+          ပေါင်းပြီး Recap Video ပြုလုပ်မည့်နေရာ ဖြစ်ပါတယ်။
+        </p>
+
+        <button disabled>
+          🎬 Generate Recap Video
+        </button>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <footer>
+    Movie Recap AI © 2026
+  </footer>
+
+</div>
+
+
+<script>
+
+  const videoInput =
+    document.getElementById("videoInput");
+
+  const videoPreview =
+    document.getElementById("videoPreview");
+
+  const fileName =
+    document.getElementById("fileName");
+
+  const generateBtn =
+    document.getElementById("generateBtn");
+
+  const progressBox =
+    document.getElementById("progressBox");
+
+  const progressBar =
+    document.getElementById("progressBar");
+
+  const status =
+    document.getElementById("status");
+
+  const results =
+    document.getElementById("results");
+
+  const recapText =
+    document.getElementById("recapText");
+
+
+  let selectedVideo = null;
+
+
+  /* VIDEO UPLOAD */
+
+  videoInput.addEventListener("change", function () {
+
+    const file = this.files[0];
+
+    if (!file) {
+      return;
+    }
+
+    selectedVideo = file;
+
+    fileName.textContent =
+      "📹 " + file.name;
+
+    const videoURL =
+      URL.createObjectURL(file);
+
+    videoPreview.src = videoURL;
+
+    videoPreview.style.display = "block";
+
+  });
+
+
+  /* GENERATE RECAP */
+
+  generateBtn.addEventListener("click", function () {
+
+    if (!selectedVideo) {
+
+      alert("အရင်ဆုံး Video တစ်ခုရွေးပါ။");
+
+      return;
+    }
+
+
+    generateBtn.disabled = true;
+
+    progressBox.style.display = "block";
+
+    results.style.display = "none";
+
+    progressBar.style.width = "0%";
+
+
+    let progress = 0;
+
+
+    const messages = [
+
+      "Video ကို စစ်ဆေးနေပါတယ်...",
+
+      "Audio ကို ရှာနေပါတယ်...",
+
+      "Speech ကို Text ပြောင်းနေပါတယ်...",
+
+      "Story ကို ခွဲခြမ်းစိတ်ဖြာနေပါတယ်...",
+
+      "Recap Script ရေးနေပါတယ်...",
+
+      "ပြီးတော့မယ်..."
+
+    ];
+
+
+    let messageIndex = 0;
+
+
+    const timer = setInterval(function () {
+
+      progress += 5;
+
+      progressBar.style.width =
+        progress + "%";
+
+
+      if (
+        progress % 20 === 0 &&
+        messageIndex < messages.length
+      ) {
+
+        status.textContent =
+          messages[messageIndex];
+
+        messageIndex++;
+
+      }
+
+
+      if (progress >= 100) {
+
+        clearInterval(timer);
+
+        showRecap();
+
+      }
+
+    }, 120);
+
+  });
+
+
+  /* SHOW RECAP */
+
+  function showRecap() {
+
+    const language =
+      document.getElementById("language").value;
+
+    const length =
+      document.getElementById("recapLength").value;
+
+
+    if (language === "my") {
+
+      recapText.textContent =
+
+`🎬 Movie Recap
+
+ဒီနေရာမှာ သင်တင်ထားတဲ့ Movie Video ကို
+AI Backend ချိတ်ဆက်ပြီး တကယ်ခွဲခြမ်းစိတ်ဖြာကာ
+Movie Recap Script အဖြစ် ထုတ်ပေးမှာ ဖြစ်ပါတယ်။
+
+Recap Length: ${length}
+
+လက်ရှိ Version မှာ Website UI,
+Video Upload, Video Preview နဲ့
+Recap Result Interface ကို ပြုလုပ်ထားပါတယ်။
+
+နောက်တစ်ဆင့်မှာ—
+
+Video
+↓
+Speech-to-Text
+↓
+AI Story Analysis
+↓
+AI Recap Script
+↓
+AI Voice
+↓
+SRT Subtitle
+↓
+Recap Video
+
+အဖြစ် တကယ်အလုပ်လုပ်အောင် Backend ကို
+ချိတ်ဆက်နိုင်ပါတယ်။`;
+
+    } else {
+
+      recapText.textContent =
+
+`🎬 Movie Recap
+
+Your uploaded movie video will be processed
+by the AI backend.
+
+The system will:
+
+Video
+↓
+Speech-to-Text
+↓
+AI Story Analysis
+↓
+AI Recap Script
+↓
+AI Voice
+↓
+SRT Subtitle
+↓
+Recap Video
+
+Recap Length: ${length}
+
+Current version contains the complete
+frontend interface and video upload system.`;
+
+    }
+
+
+    results.style.display = "block";
+
+    status.textContent =
+      "✅ Processing Complete";
+
+    generateBtn.disabled = false;
+
+  }
+
+
+  /* DOWNLOAD */
+
+  function downloadRecap() {
+
+    const text =
+      recapText.textContent;
+
+    const blob =
+      new Blob(
+        [text],
+        {
+          type: "text/plain;charset=utf-8"
+        }
+      );
+
+
+    const url =
+      URL.createObjectURL(blob);
+
+
+    const link =
+      document.createElement("a");
+
+    link.href = url;
+
+    link.download =
+      "movie-recap.txt";
+
+    link.click();
+
+
+    URL.revokeObjectURL(url);
+
+  }
+
+</script>
+
 </body>
 </html>
