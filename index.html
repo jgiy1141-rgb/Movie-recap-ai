@@ -289,43 +289,142 @@
 
 
     <button id="generateBtn">
-      🤖 Generate Recap
-    </button>
+      🤖 Generate Recap/* GENERATE RECAP */
 
+generateBtn.addEventListener("click", async function () {
 
-    <div id="progressBox">
+  if (!selectedVideo) {
+    alert("အရင်ဆုံး Video တစ်ခုရွေးပါ။");
+    return;
+  }
 
-      <div class="progress">
+  generateBtn.disabled = true;
+  progressBox.style.display = "block";
+  results.style.display = "none";
+  progressBar.style.width = "10%";
 
-        <div id="progressBar"></div>
+  status.textContent = "🎥 Video ကို ပြင်ဆင်နေပါတယ်...";
 
-      </div>
+  try {
 
-      <div id="status">
-        Preparing...
-      </div>
+    const formData = new FormData();
 
-    </div>
+    formData.append("audio", selectedVideo);
 
-  </div>
+    progressBar.style.width = "40%";
 
+    status.textContent =
+      "🎙️ Audio ကို Whisper ဆီ ပို့နေပါတယ်...";
 
-  <!-- RESULTS -->
+    const response = await fetch(
+      "https://icy-credit-1319.jgiy1141.workers.dev/",
+      {
+        method: "POST",
+        body: formData
+      }
+    );
 
-  <div id="results">
+    if (!response.ok) {
+      throw new Error("HTTP " + response.status);
+    }
 
-    <div class="card">
+    const data = await response.json();
 
-      <h2>📝 AI Recap</h2>
+    progressBar.style.width = "70%";
 
-      <div class="result">
+    status.textContent =
+      "📝 Speech ကို Text ပြောင်းပြီးပါပြီ...";
 
-        <p id="recapText"></p>
+    const transcript =
+      data.text ||
+      data.transcription ||
+      "";
 
-        <button
-          class="download"
-          onclick="downloadRecap()"
-        >
+    if (!transcript) {
+      throw new Error("Transcript မရပါ။");
+    }
+
+    status.textContent =
+      "🤖 AI Recap ရေးနေပါတယ်...";
+
+    const language =
+      document.getElementById("language").value;
+
+    const length =
+      document.getElementById("recapLength").value;
+
+    const recapPrompt =
+      language === "my"
+        ? `အောက်မှာ movie video မှရထားတဲ့ transcript ရှိပါတယ်။
+
+Transcript:
+${transcript}
+
+ဒီ transcript ကို အခြေခံပြီး မြန်မာဘာသာဖြင့် movie recap script ရေးပေးပါ။
+Recap length: ${length}
+ဇာတ်လမ်းအကြောင်းအရာ မပျောက်အောင် ရေးပါ။
+နားလည်လွယ်ပြီး စိတ်ဝင်စားဖွယ် ရေးပါ။`
+        : `Here is the transcript from a movie video.
+
+Transcript:
+${transcript}
+
+Write an engaging movie recap script based only on this transcript.
+Recap length: ${length}
+Keep the important story details clear.`;
+
+    const recapResponse = await fetch(
+      "https://icy-credit-1319.jgiy1141.workers.dev/",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          prompt: recapPrompt
+        })
+      }
+    );
+
+    if (!recapResponse.ok) {
+      throw new Error(
+        "Recap HTTP " + recapResponse.status
+      );
+    }
+
+    const recapData =
+      await recapResponse.json();
+
+    progressBar.style.width = "100%";
+
+    recapText.textContent =
+      recapData.response ||
+      recapData.result ||
+      recapData.text ||
+      JSON.stringify(recapData);
+
+    results.style.display = "block";
+
+    status.textContent =
+      "✅ AI Recap ပြီးပါပြီ";
+
+  } catch (error) {
+
+    console.error(error);
+
+    recapText.textContent =
+      "❌ Error: " + error.message;
+
+    results.style.display = "block";
+
+    status.textContent =
+      "❌ AI Error";
+
+  }
+
+  generateBtn.disabled = false;
+
+});
           ⬇️ Download Recap
         </button>
 
