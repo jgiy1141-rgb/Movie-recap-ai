@@ -306,7 +306,21 @@
     </button>
   </div>
 </div>
-    <script>
+    <script>const videoInput = document.getElementById("videoInput");
+const videoPreview = document.getElementById("videoPreview");
+const fileName = document.getElementById("fileName");
+
+videoInput.addEventListener("change", function () {
+  const file = videoInput.files[0];
+
+  if (!file) return;
+
+  fileName.textContent = file.name;
+
+  videoPreview.src = URL.createObjectURL(file);
+  videoPreview.style.display = "block";
+});
+      
     /* SHOW RECAP */
 
 const generateBtn = document.getElementById("generateBtn");
