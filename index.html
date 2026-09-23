@@ -321,7 +321,7 @@ videoInput.addEventListener("change", function () {
   videoPreview.style.display = "block";
 });
       
-    /* SHOW RECAP */
+    
 
 const generateBtn = document.getElementById("generateBtn");
 const status = document.getElementById("status");
@@ -332,74 +332,222 @@ generateBtn.addEventListener("click", showRecap);
       
 async function showRecap() {
 
-  const language =
-    document.getElementById("language").value;
+  /* SHOW RECAP */
 
-  const length =
-    document.getElementById("recapLength").value;
+const generateBtn =
+  document.getElementById("generateBtn");
 
-  status.textContent =
-    "🤖 AI Recap ရေးနေပါတယ်...";
+const status =
+  document.getElementById("status");
 
-  const prompt =
-    language === "my"
-      ? `မြန်မာဘာသာဖြင့် movie recap script တစ်ခုရေးပေးပါ။
-Recap length: ${length}
-ဇာတ်လမ်းကို နားလည်လွယ်ပြီး စိတ်ဝင်စားဖွယ် ရေးပါ။`
-      : `Write a movie recap script in English.
-Recap length: ${length}
-Make it clear and engaging.`;
+const results =
+  document.getElementById("results");
+
+const recapText =
+  document.getElementById("recapText");
+
+
+generateBtn.addEventListener(
+  "click",
+  showRecap
+);
+
+
+async function showRecap() {
+
+  const video =
+    document.getElementById("videoPreview");
+
+  const videoFile =
+    document.getElementById("videoInput").files[0];
+
+  if (!videoFile) {
+    status.textContent =
+      "⚠️ Video အရင်ရွေးပါ";
+    return;
+  }
 
   try {
 
-    const response = await fetch(
-      "https://icy-credit-1319.jgiy1141.workers.dev/",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          prompt: prompt
-        })
-      }
+    generateBtn.disabled = true;
+
+    results.style.display = "none";
+
+    status.textContent =
+      "🎬 Video ထဲက အသံကို ထုတ်နေပါတယ်...";
+
+
+    /* VIDEO → AUDIO */
+
+    const stream =
+      video.captureStream();
+
+    const audioTracks =
+      stream.getAudioTracks();
+
+    if (audioTracks.length === 0) {
+      throw new Error(
+        "ဒီ Video မှာ Audio track မတွေ့ပါ။"
+      );
+    }
+
+
+    const audioStream =
+      new MediaStream(audioTracks);
+
+
+    const recorder =
+      new MediaRecorder(
+        audioStream,
+        {
+          mimeType: "audio/webm"
+        }
+      );
+
+
+    const audioChunks = [];
+
+
+    recorder.ondataavailable =
+      function (event) {
+
+        if (event.data.size > 0) {
+          audioChunks.push(event.data);
+        }
+
+      };
+
+
+    const audioBlobPromise =
+      new Promise(
+        (resolve) => {
+
+          recorder.onstop =
+            function () {
+
+              const blob =
+                new Blob(
+                  audioChunks,
+                  {
+                    type: "audio/webm"
+                  }
+                );
+
+              resolve(blob);
+
+            };
+
+        }
+      );
+
+
+    video.currentTime = 0;
+
+    await video.play();
+
+    recorder.start();
+
+
+    video.onended =
+      function () {
+
+        if (
+          recorder.state !== "inactive"
+        ) {
+          recorder.stop();
+        }
+
+      };
+
+
+    const audioBlob =
+      await audioBlobPromise;
+
+
+    status.textContent =
+      "🎙️ Whisper က အသံကို စာသားပြောင်းနေပါတယ်...";
+
+
+    /* AUDIO → WHISPER */
+
+    const formData =
+      new FormData();
+
+    formData.append(
+      "audio",
+      audioBlob,
+      "movie-audio.webm"
     );
 
+
+    const response =
+      await fetch(
+        "https://icy-credit-1319.jgiy1141.workers.dev/",
+        {
+          method: "POST",
+          body: formData
+        }
+      );
+
+
     if (!response.ok) {
-      throw new Error("HTTP " + response.status);
+      throw new Error(
+        "Whisper HTTP " +
+        response.status
+      );
     }
+
 
     const data =
       await response.json();
 
-    recapText.textContent =
-      data.response ||
-      data.result ||
-      data.text ||
-      JSON.stringify(data);
 
-    results.style.display = "block";
+    /* WHISPER RESULT */
+
+    const transcript =
+      data.text ||
+      data.transcription ||
+      "";
+
+
+    if (!transcript) {
+      throw new Error(
+        "Whisper က စာသားမထုတ်ပေးပါ။"
+      );
+    }
+
+
+    recapText.textContent =
+      transcript;
+
+    results.style.display =
+      "block";
+
 
     status.textContent =
-      "✅ AI Recap ပြီးပါပြီ";
+      "✅ Video အသံကို စာသားအဖြစ် ရပါပြီ";
+
 
   } catch (error) {
 
     console.error(error);
 
     recapText.textContent =
-      "AI Recap မရသေးပါ။ Worker API ကို စစ်ဆေးပေးပါ။";
+      error.message;
 
-    results.style.display = "block";
+    results.style.display =
+      "block";
 
     status.textContent =
-      "❌ AI Error";
+      "❌ Audio / Whisper Error";
+
   }
 
-  generateBtn.disabled = false;
-  }
-  
 
+  generateBtn.disabled =
+    false;
+
+}
   function downloadRecap() {
 
     const text =
