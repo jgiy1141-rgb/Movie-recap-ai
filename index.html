@@ -483,9 +483,13 @@ async function showRecap() {
 
 
     if (!response.ok) {
-      throw new Error(
-        "Whisper HTTP " +
-        response.status
+  const errorData = await response.json().catch(() => ({}));
+  throw new Error(
+    errorData.error ||
+    "Whisper HTTP " + response.status
+  );
+    }
+      
       );
     }
 
