@@ -497,10 +497,11 @@ async function showRecap() {
 
     /* WHISPER RESULT */
 
-    const transcript =
-      data.text ||
-      data.transcription ||
-      "";
+    const recap =
+  data.text ||
+  "";
+
+recapText.textContent = recap;
 
 
     if (!transcript) {
@@ -510,8 +511,6 @@ async function showRecap() {
     }
 
 
-    recapText.textContent =
-      transcript;
 
     results.style.display =
       "block";
