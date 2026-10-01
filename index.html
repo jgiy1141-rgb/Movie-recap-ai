@@ -495,32 +495,28 @@ async function showRecap() {
       await response.json();
 
 
-    /* WHISPER RESULT */
+   /* AI RECAP RESULT */
 
-    const recap =
+const recap =
   data.text ||
   "";
 
-recapText.textContent = recap;
+if (!recap) {
+  throw new Error(
+    "AI Recap စာသားမရပါ။"
+  );
+}
 
+recapText.textContent =
+  recap;
 
-    if (!transcript) {
-      throw new Error(
-        "Whisper က စာသားမထုတ်ပေးပါ။"
-      );
-    }
+results.style.display =
+  "block";
 
-
-
-    results.style.display =
-      "block";
-
-
-    status.textContent =
-      "✅ Video အသံကို စာသားအဖြစ် ရပါပြီ";
-
-
-  } catch (error) {
+status.textContent =
+  "✅ AI Recap ပြီးပါပြီ";
+    ntent =
+(error) {
 
     console.error(error);
 
